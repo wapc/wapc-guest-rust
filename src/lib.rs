@@ -103,7 +103,7 @@ pub extern "C" fn __guest_call(op_len: i32, req_len: i32) -> i32 {
             }
         }
         None => {
-            let errmsg = format!("Could not find function \"{}\"", opstr);
+            let errmsg = format!("No handler registered for function \"{}\"", opstr);
             unsafe {
                 __guest_error(errmsg.as_ptr(), errmsg.len() as _);
             }
