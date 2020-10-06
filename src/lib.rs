@@ -24,9 +24,9 @@
 //! }
 //! ```
 
-use std::collections::HashMap;
-use std::sync::Mutex;
 use lazy_static::lazy_static;
+use std::collections::HashMap;
+use std::sync::RwLock;
 
 /// WaPC Guest SDK result type
 pub type Result<T> = std::result::Result<T, errors::Error>;
@@ -56,12 +56,12 @@ extern "C" {
 }
 
 lazy_static! {
-    static ref REGISTRY: Mutex<HashMap<String, fn(&[u8]) -> CallResult>> =
-        Mutex::new(HashMap::new());
+    static ref REGISTRY: RwLock<HashMap<String, fn(&[u8]) -> CallResult>> =
+        RwLock::new(HashMap::new());
 }
 
 pub fn register_function(name: &str, f: fn(&[u8]) -> CallResult) {
-    REGISTRY.lock().unwrap().insert(name.to_string(), f);
+    REGISTRY.write().unwrap().insert(name.to_string(), f);
 }
 
 #[no_mangle]
@@ -84,24 +84,22 @@ pub extern "C" fn __guest_call(op_len: i32, req_len: i32) -> i32 {
 
     let opstr = ::std::str::from_utf8(op).unwrap();
 
-    match REGISTRY.lock().unwrap().get(opstr) {
-        Some(handler) => {
-            match handler(&slice) {
-                Ok(result) => {
-                    unsafe {
-                        __guest_response(result.as_ptr(), result.len() as _);
-                    }
-                    1
+    match REGISTRY.read().unwrap().get(opstr) {
+        Some(handler) => match handler(&slice) {
+            Ok(result) => {
+                unsafe {
+                    __guest_response(result.as_ptr(), result.len() as _);
                 }
-                Err(e) => {
-                    let errmsg = format!("Guest call failed: {}", e);
-                    unsafe {
-                        __guest_error(errmsg.as_ptr(), errmsg.len() as _);
-                    }
-                    0
-                }
+                1
             }
-        }
+            Err(e) => {
+                let errmsg = format!("Guest call failed: {}", e);
+                unsafe {
+                    __guest_error(errmsg.as_ptr(), errmsg.len() as _);
+                }
+                0
+            }
+        },
         None => {
             let errmsg = format!("No handler registered for function \"{}\"", opstr);
             unsafe {

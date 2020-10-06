@@ -11,8 +11,5 @@ readme = "README.md"
 keywords = ["sdk", "wapc", "webassembly", "wasm", "waxosuit"]
 categories = ["wasm", "api-bindings"]
 
-[badges]
-travis-ci = { repository = "wapc/wapc-guest-rust", branch = "master" }
-
 [dependencies]
 lazy_static = "1.4.0"
