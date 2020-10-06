@@ -1,6 +1,6 @@
 [package]
 name = "wapc-guest"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["waPC team <alothien@gmail.com>"]
 edition = "2018"
 description = "Guest SDK for building waPC-compliant WebAssembly Modules"
@@ -15,3 +15,4 @@ categories = ["wasm", "api-bindings"]
 travis-ci = { repository = "wapc/wapc-guest-rust", branch = "master" }
 
 [dependencies]
+lazy_static = "1.4.0"
